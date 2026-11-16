@@ -43,8 +43,10 @@ git remote get-url origin >nul 2>&1 || (
   echo.
   echo Creez d'abord un depot VIDE sur https://github.com/new  ^(sans README^).
   set /p URL=Collez son adresse ^(ex. https://github.com/Maroxane/CL-FI-V2-Identity-Leakage.git^) : 
-  git remote add origin "!URL!" || goto fail
+  for /f "tokens=*" %%u in ("!URL!") do git remote add origin %%u || goto fail
 )
+rem remove spaces pasted before or after the address
+for /f "tokens=*" %%u in ('git remote get-url origin') do git remote set-url origin %%u
 git push -u origin main && goto done
 echo.
 echo Le depot distant contient deja un autre historique.
