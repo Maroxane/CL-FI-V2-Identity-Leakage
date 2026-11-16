@@ -1,0 +1,37 @@
+cff-version: 1.2.0
+message: "If you use this code, please cite the paper below."
+title: "Identity leakage in ChaLearn First Impressions V2: code, splits and results"
+type: software
+license: MIT
+repository-code: "https://github.com/Maroxane/CL-FI-V2-Identity-Leakage"
+authors:
+  - family-names: Echhaimi
+    given-names: Marouane
+  - family-names: Lekdioui
+    given-names: Khadija
+  - family-names: Chaabi
+    given-names: Youness
+  - family-names: Aziz
+    given-names: Oussama
+  - family-names: El-Khaldi
+    given-names: Adnane
+  - family-names: Boujiha
+    given-names: Tarik
+preferred-citation:
+  type: article
+  title: "Identity Leakage in ChaLearn First Impressions V2: What Multimodal Apparent Personality Recognition Benchmarks Actually Measure"
+  authors:
+    - family-names: Echhaimi
+      given-names: Marouane
+    - family-names: Lekdioui
+      given-names: Khadija
+    - family-names: Chaabi
+      given-names: Youness
+    - family-names: Aziz
+      given-names: Oussama
+    - family-names: El-Khaldi
+      given-names: Adnane
+    - family-names: Boujiha
+      given-names: Tarik
+  year: 2026
+  notes: "Under review"

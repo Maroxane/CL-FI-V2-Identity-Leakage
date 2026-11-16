@@ -1,0 +1,84 @@
+# ============================================================================
+# SG-MBF - configuration (NVIDIA GeForce RTX 3060, laptop 6 GB or desktop 12 GB)
+# Relative paths are resolved from the SGMBF folder.
+# ============================================================================
+
+paths:
+  dataset_root: "Chalearn"        # mp4 videos + annotation_*.pkl (searched recursively)
+  cache: "cache"                  # cached per-clip features (resumable)
+  runs: "runs"                    # training logs, checkpoints
+  results: "results"              # CSV / Markdown tables for the article
+  logs: "logs"
+  mupta_root: "Mupta"             # MuPTA corpus (cross-dataset evaluation)
+  cache_mupta: "cache_mupta"
+  official_archives: "Chalearn V2"  # official ChaLearn .zip files (extraire_archives.bat)
+
+data:
+  # "auto": official ChaLearn splits if annotation_training/validation/test.pkl and videos exist,
+  #         otherwise an internal 70/15/15 split of the labelled clips, grouped by YouTube video id.
+  split_mode: auto
+  internal_split: [0.70, 0.15, 0.15]
+  internal_split_seed: 2024
+  max_clips: null                 # e.g. 200 for a quick test of the whole pipeline
+
+extraction:
+  device: cuda
+  fp16: true
+  # --- text
+  use_provided_transcripts: true  # transcription_*.pkl if present; otherwise Whisper
+  whisper_model: large-v3         # faster-whisper; int8_float16 fits in 6 GB
+  whisper_compute_type: int8_float16
+  whisper_language: en
+  bert_model: bert-base-uncased
+  sbert_model: sentence-transformers/all-mpnet-base-v2
+  text_batch_size: 32
+  max_tokens: 256
+  # --- audio
+  sample_rate: 16000
+  audio_workers: 4                # parallel ffmpeg decoding threads
+  # --- visual
+  visual_fps: 5                   # frames per second for landmarks and pose
+  emo_frames: 16                  # frames passed to Emo-AffectNet per clip
+  emo_repo: ElenaRyumina/face_emotion_recognition
+  emo_file: FER_static_ResNet50_AffectNet.pt
+  emo_batch: 64
+  visual_workers: 8               # CPU processes for MediaPipe (reduce to 2 on a 4-core laptop)
+  face_margin: 0.15
+
+training:
+  gate_variant: layernorm                # chosen on validation (results/gate_selection.md)
+  d_h: 256
+  head_hidden: [512, 256]
+  dropout: 0.3
+  lr: 1.0e-4
+  weight_decay: 1.0e-5
+  grad_clip: 1.0
+  batch_size: 32
+  max_epochs: 100
+  lr_patience: 5
+  lr_factor: 0.5
+  early_stop_patience: 15
+  amp: true
+  seeds: [1, 2, 3, 4, 5]
+
+evaluation:
+  bootstrap: 10000
+  robustness_snr_db: [40, 30, 20, 10, 0]
+  robustness_frame_drop: [0.0, 0.25, 0.5, 0.75]
+  babble_wav: null                # optional path to a babble-noise wav; white noise otherwise
+
+mupta:
+  views: [center]                 # camera views used (center | left | right); the 3 views share the same audio
+  # MuPTA (Ryumina et al., Interspeech 2023): 30 Russian speakers, self-reported Big Five per speaker.
+  invert_neuroticism: true        # MuPTA gives Neuroticism; FI V2 'neuroticism' is used as Non-Neuroticism (MuPTA readme: 1 - N)
+  text_mode: translate            # translate (ru -> en, then the English text branch) | none (text branch disabled)
+  translate_model: Helsinki-NLP/opus-mt-ru-en
+  min_duration_s: 1.0             # skip very short read-speech clips
+  spontaneous_min_s: 4.0          # clips >= 4 s analysed separately (spontaneous speech is >= 4 s in MuPTA)
+  max_clips_per_speaker: null     # e.g. 40 for a quicker run
+  fewshot_epochs: 60
+  fewshot_lr: 1.0e-4
+
+web:
+  monitor_port: 8001
+  demo_port: 8002

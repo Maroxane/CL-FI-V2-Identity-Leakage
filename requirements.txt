@@ -1,0 +1,21 @@
+# PyTorch with CUDA is installed separately by start.bat (index https://download.pytorch.org/whl/cu124)
+numpy>=1.24,<2
+pyyaml>=6.0
+pandas>=2.0
+matplotlib>=3.7
+transformers>=4.40,<5
+sentencepiece>=0.2
+sacremoses>=0.1
+sentence-transformers>=2.7,<4
+faster-whisper>=1.0.3
+empath==0.89
+opensmile>=2.5
+mediapipe==0.10.14
+imageio-ffmpeg>=0.5
+resampy>=0.4
+soundfile>=0.12
+huggingface_hub>=0.23
+fastapi>=0.110
+uvicorn>=0.29
+python-multipart>=0.0.9
+psutil>=5.9

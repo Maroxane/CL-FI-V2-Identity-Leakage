@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SG-MBF · Suivi de l'entraînement</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#16181d;--mute:#667085;--line:#e4e7ec;--acc:#6A3D9A;--t:#0072B2;--a:#D55E00;--v:#009E73;--ok:#12805c;--warn:#b54708;--err:#b42318}
+*{box-sizing:border-box}body{margin:0;font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+header{display:flex;align-items:center;gap:16px;padding:14px 24px;background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+header h1{font-size:17px;margin:0;font-weight:650}header .sub{color:var(--mute);font-size:13px}
+.pill{padding:3px 10px;border-radius:99px;font-size:12px;font-weight:600;background:#eef0f3;color:var(--mute)}
+.pill.running{background:#ece5f6;color:var(--acc)}.pill.finished{background:#e3f4ec;color:var(--ok)}.pill.error{background:#fde8e6;color:var(--err)}.pill.stopped{background:#fff1e0;color:var(--warn)}
+main{padding:20px 24px;max-width:1500px;margin:auto;display:grid;gap:16px}
+.grid{display:grid;gap:16px}.g4{grid-template-columns:repeat(4,minmax(0,1fr))}.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(max-width:1100px){.g4{grid-template-columns:repeat(2,1fr)}.g2{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+.card h2{font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--mute);margin:0 0 10px;font-weight:600}
+.big{font-size:24px;font-weight:650}.mute{color:var(--mute)}.small{font-size:12px}
+.bar{height:8px;background:#eef0f3;border-radius:99px;overflow:hidden;margin:8px 0}.bar>div{height:100%;background:var(--acc);transition:width .5s}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13px}.kv b{font-weight:600}
+.warn{background:#fff6e5;border:1px solid #f5d199;color:#7a4b00;padding:10px 14px;border-radius:10px;font-size:13px}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+button{font:inherit;border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 12px;cursor:pointer;font-weight:550}
+button:hover{border-color:#c9ced6}button.primary{background:var(--acc);border-color:var(--acc);color:#fff}button.danger{color:var(--err);border-color:#f3c3be}
+button:disabled{opacity:.45;cursor:not-allowed}
+canvas{width:100%;height:220px;display:block}
+table{border-collapse:collapse;width:100%;font-size:12.5px}th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--mute);font-weight:600;position:sticky;top:0;background:#fff}tr.sel{background:#f3eefa}tr:hover{background:#fafafb;cursor:pointer}
+.scroll{max-height:340px;overflow:auto}
+pre{background:#0f1115;color:#d5d9e0;padding:12px;border-radius:10px;max-height:300px;overflow:auto;font-size:12px;margin:0}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--mute);margin-bottom:4px}.legend i{display:inline-block;width:10px;height:3px;margin-right:5px;vertical-align:middle}
+.md{overflow-x:auto}.md table{margin:8px 0 16px}.md h1{font-size:16px}.md h2{font-size:14px;margin-top:18px}
+a{color:var(--acc)}
+</style>
+</head>
+<body>
+<header>
+  <div><h1>SG-MBF · Suivi de l'entraînement</h1><div class="sub">Shared-Gate Multi-Branch Fusion · ChaLearn First Impressions V2</div></div>
+  <span id="pill" class="pill">—</span>
+  <span style="flex:1"></span>
+  <a href="#" id="demoLink" target="_blank">Ouvrir l'interface de test ↗</a>
+</header>
+<main>
+  <div id="splitWarn" class="warn" style="display:none"></div>
+
+  <div class="grid g4">
+    <div class="card"><h2>Tâche en cours</h2>
+      <div id="stage" class="big" style="font-size:16px">—</div>
+      <div class="bar"><div id="prog" style="width:0%"></div></div>
+      <div class="small mute" id="progtxt">—</div>
+    </div>
+    <div class="card"><h2>Entraînement</h2>
+      <div class="big" id="epoch">—</div>
+      <div class="small mute" id="runname">—</div>
+      <div class="small" id="lastval" style="margin-top:6px">—</div>
+    </div>
+    <div class="card"><h2>GPU</h2>
+      <div class="big" id="gpuutil">—</div>
+      <div class="bar"><div id="vram" style="width:0%;background:var(--t)"></div></div>
+      <div class="small mute" id="gputxt">—</div>
+    </div>
+    <div class="card"><h2>Données et cache</h2>
+      <div class="kv small" id="datakv">—</div>
+    </div>
+  </div>
+
+  <div class="card"><h2>Actions</h2>
+    <div class="actions">
+      <button data-a="download">0 · Télécharger les données manquantes</button>
+      <button data-a="extract">1 · Extraire les features</button>
+      <button data-a="main" class="primary">2 · Entraîner SG-MBF (5 seeds)</button>
+      <button data-a="fusion">3 · Baselines de fusion</button>
+      <button data-a="ablation">4 · Ablations</button>
+      <button data-a="robustness">5 · Robustesse</button>
+      <button data-a="fairness">6 · Équité</button>
+      <button data-a="pipeline">Pipeline complet (1→6)</button>
+      <button data-a="mupta_extract">7 · MuPTA : features</button>
+      <button data-a="mupta_cross">8 · Cross-dataset FI → MuPTA</button>
+      <button data-a="gate_select">9 · Variantes du gate (validation)</button>
+      <button data-a="gate_final">10 · Évaluation finale (test)</button>
+      <button data-a="identity">11 · Identités (visage + voix)</button>
+      <button data-a="leakage">12 · Audit de fuite (S0 / S1 / S2)</button>
+      <button data-a="phase2">13 · Phase 2 (robustesse, équité, sonde, MuPTA sans fuite)</button>
+      <button data-a="control">14 · Contrôle : personnes vues / inédites</button>
+      <span style="flex:1"></span>
+      <button id="diagBtn">Diagnostic</button>
+      <button id="stopBtn" class="danger">■ Arrêter la tâche</button>
+    </div>
+    <div class="small mute" style="margin-top:8px">Chaque étape reprend là où elle s'est arrêtée : les features et les runs déjà terminés sont réutilisés. Les étapes 2 à 6 lancent d'abord l'extraction des features si elle n'est pas terminée.</div>
+    <pre id="diag" style="display:none;margin-top:10px"></pre>
+  </div>
+
+  <div class="grid g2">
+    <div class="card"><h2>Perte (MSE) · <span id="chartRun" class="mute" style="text-transform:none">—</span></h2>
+      <div class="legend"><span><i style="background:#98a2b3"></i>train</span><span><i style="background:var(--acc)"></i>validation</span></div>
+      <canvas id="cLoss"></canvas></div>
+    <div class="card"><h2>Validation · précision (1 − MAE) et CCC</h2>
+      <div class="legend"><span><i style="background:var(--acc)"></i>précision (%)</span><span><i style="background:var(--ok)"></i>CCC (axe droit)</span></div>
+      <canvas id="cAcc"></canvas></div>
+    <div class="card"><h2>Portes moyennes sur la validation</h2>
+      <div class="legend"><span><i style="background:var(--t)"></i>texte g_t</span><span><i style="background:var(--a)"></i>voix g_a</span><span><i style="background:var(--v)"></i>visuel g_v</span></div>
+      <canvas id="cGate"></canvas></div>
+    <div class="card"><h2>Taux d'apprentissage</h2><canvas id="cLr"></canvas></div>
+  </div>
+
+  <div class="card"><h2>Runs</h2>
+    <div class="scroll"><table id="runs"><thead><tr><th>Groupe</th><th>Modèle</th><th>Config.</th><th>Seed</th><th>Époques</th><th>Meilleure</th><th>Val. MSE</th><th>Test précision</th><th>Test CCC</th><th>Paramètres</th></tr></thead><tbody></tbody></table></div>
+  </div>
+
+  <div class="grid g2">
+    <div class="card"><h2>Résultats (results/tables.md)</h2><div id="tables" class="md small mute">Aucun résultat pour l'instant.</div><div id="files" class="small" style="margin-top:8px"></div></div>
+    <div class="card"><h2>Journal</h2><pre id="log">—</pre></div>
+  </div>
+</main>
+<script>
+const $=s=>document.querySelector(s);
+let selected=null, followActive=true;
+$('#demoLink').href=location.protocol+'//'+location.hostname+':8002/';
+const fmtT=s=>{if(s==null||!isFinite(s))return'—';s=Math.round(s);const h=Math.floor(s/3600),m=Math.floor(s%3600/60);return h?`${h} h ${m} min`:m?`${m} min ${s%60} s`:`${s} s`};
+const pct=(x,d=2)=>x==null?'—':(100*x).toFixed(d)+' %';
+
+function chart(cv,series,opt={}){
+  const dpr=window.devicePixelRatio||1,W=cv.clientWidth,H=cv.clientHeight;cv.width=W*dpr;cv.height=H*dpr;
+  const g=cv.getContext('2d');g.scale(dpr,dpr);g.clearRect(0,0,W,H);
+  const L=46,R=opt.right?46:12,T=8,B=24,pw=W-L-R,ph=H-T-B;
+  const left=series.filter(s=>!s.right),right=series.filter(s=>s.right);
+  const all=series.flatMap(s=>s.y.map((v,i)=>[s.x[i],v])).filter(p=>p[1]!=null&&isFinite(p[1]));
+  if(!all.length){g.fillStyle='#98a2b3';g.font='12px system-ui';g.fillText('En attente de données…',L,H/2);return}
+  const xmin=Math.min(...all.map(p=>p[0])),xmax=Math.max(...all.map(p=>p[0]))||1;
+  const rng=ss=>{const v=ss.flatMap(s=>s.y).filter(v=>v!=null&&isFinite(v));if(!v.length)return[0,1];let a=Math.min(...v),b=Math.max(...v);if(opt.log){a=Math.log10(a);b=Math.log10(b)}const p=(b-a)*.08||Math.abs(a)*.05||.01;return[a-p,b+p]};
+  const [l0,l1]=rng(left),[r0,r1]=rng(right);
+  const X=x=>L+(xmax===xmin?pw/2:(x-xmin)/(xmax-xmin)*pw);
+  const YL=y=>T+ph-((opt.log?Math.log10(y):y)-l0)/(l1-l0)*ph,YR=y=>T+ph-(y-r0)/(r1-r0)*ph;
+  g.strokeStyle='#eef0f3';g.fillStyle='#98a2b3';g.font='11px system-ui';g.lineWidth=1;
+  for(let i=0;i<=4;i++){const y=T+ph*i/4;g.beginPath();g.moveTo(L,y);g.lineTo(L+pw,y);g.stroke();
+    let v=l1-(l1-l0)*i/4;if(opt.log)v=10**v;g.textAlign='right';g.fillText(opt.fmt?opt.fmt(v):v.toPrecision(3),L-6,y+4);
+    if(right.length){const w=r1-(r1-r0)*i/4;g.textAlign='left';g.fillText(w.toFixed(3),L+pw+6,y+4)}}
+  g.textAlign='center';const nt=Math.min(6,xmax-xmin);for(let i=0;i<=nt;i++){const x=xmin+(xmax-xmin)*i/(nt||1);g.fillText(Math.round(x),X(x),H-6)}
+  for(const s of series){const Y=s.right?YR:YL;g.strokeStyle=s.c;g.fillStyle=s.c;g.lineWidth=s.w||1.8;g.beginPath();let st=false,n=0;
+    s.y.forEach((v,i)=>{if(v==null||!isFinite(v))return;const px=X(s.x[i]),py=Y(v);st?g.lineTo(px,py):g.moveTo(px,py);st=true;n++});g.stroke();
+    if(n<=25)s.y.forEach((v,i)=>{if(v==null||!isFinite(v))return;g.beginPath();g.arc(X(s.x[i]),Y(v),2.4,0,7);g.fill()})}
+}
+
+async function J(u,o){const r=await fetch(u,o);if(!r.ok)throw new Error(await r.text());return r.json()}
+
+async function refreshStatus(){
+  const s=await J('/api/status');
+  const st=s.running?'running':(s.status||'idle');
+  const p=$('#pill');p.className='pill '+st;p.textContent={running:'En cours',finished:'Terminé',error:'Erreur',stopped:'Arrêté',starting:'Démarrage',idle:'Inactif'}[st]||st;
+  $('#stage').textContent=s.error?('Erreur : '+s.error):(s.stage||'—');
+  const f=s.total?s.done/s.total:0;$('#prog').style.width=(100*f).toFixed(1)+'%';
+  $('#progtxt').textContent=s.total?`${s.done} / ${s.total} · ${(s.rate||0).toFixed(2)} /s · reste ${fmtT(s.eta_s)}`:(s.pipeline?`Pipeline : étape ${s.pipeline_step}/${s.pipeline.length} (${s.pipeline_current})`:'—');
+  $('#epoch').textContent=s.epoch?`Époque ${s.epoch} / ${s.max_epochs}`:'—';
+  $('#runname').textContent=s.current_run||'—';
+  $('#lastval').innerHTML=s.last_val_acc!=null?`Val. précision <b>${pct(s.last_val_acc)}</b> · CCC <b>${(s.last_val_ccc||0).toFixed(3)}</b>`:'—';
+  const w=$('#splitWarn');if(s.split_kind&&s.split_kind!=='official'){w.style.display='block';w.innerHTML='<b>Split interne.</b> Les fichiers officiels de validation et de test (ou les labels) sont absents : les clips étiquetés sont répartis 70/15/15 par vidéo YouTube. Les résultats <b>ne sont pas comparables</b> au test officiel ChaLearn.'}else w.style.display='none';
+  document.querySelectorAll('[data-a]').forEach(b=>b.disabled=s.running);
+  if(followActive&&s.running&&s.current_run){const r=window._runs?.find(x=>x.run===s.current_run);if(r)selected=[r.group,r.run]}
+}
+async function refreshGpu(){
+  const g=await J('/api/gpu');
+  if(!g.ok){$('#gpuutil').textContent='n/d';$('#gputxt').textContent='nvidia-smi indisponible';return}
+  $('#gpuutil').textContent=g.util.toFixed(0)+' %';
+  $('#vram').style.width=(100*g.mem_used/g.mem_total).toFixed(1)+'%';
+  $('#gputxt').textContent=`${g.name} · VRAM ${(g.mem_used/1024).toFixed(1)}/${(g.mem_total/1024).toFixed(1)} Go · ${g.temp} °C${g.power?` · ${g.power.toFixed(0)} W`:''}`;
+}
+async function refreshCache(){
+  const c=await J('/api/cache');const a=c.audit||{},n=a.n_per_split||{};
+  const rows=[['Split',a.split_kind||'—'],['Vidéos trouvées',a.n_videos_found??'—'],['Clips étiquetés',a.n_labelled??'—'],
+    ['Train / val / test',n.train!=null?`${n.train} / ${n.val} / ${n.test}`:'—'],
+    ['Cache texte / audio / visuel',`${c.counts.text} / ${c.counts.audio} / ${c.counts.visual}`],
+    ['Expressions',c.meta.emotion_backbone||'—']];
+  $('#datakv').innerHTML=rows.map(r=>`<span class="mute">${r[0]}</span><b>${r[1]}</b>`).join('');
+}
+async function refreshRuns(){
+  const rs=await J('/api/runs');window._runs=rs;
+  if(!selected&&rs.length)selected=[rs[0].group,rs[0].run];
+  $('#runs tbody').innerHTML=rs.map(r=>`<tr data-g="${r.group}" data-r="${r.run}" class="${selected&&selected[1]===r.run?'sel':''}">
+    <td>${r.group}</td><td>${r.model}${r.active?' <span class="pill running">actif</span>':''}</td><td>${r.label||''}</td><td>${r.seed}</td>
+    <td>${r.epochs??'…'}</td><td>${r.best_epoch??'…'}</td><td>${r.best_val_loss!=null?r.best_val_loss.toFixed(5):'…'}</td>
+    <td>${pct(r.test_acc)}</td><td>${r.test_ccc!=null?r.test_ccc.toFixed(3):'—'}</td><td>${r.params?r.params.toLocaleString('fr'):''}</td></tr>`).join('');
+  document.querySelectorAll('#runs tbody tr').forEach(tr=>tr.onclick=()=>{selected=[tr.dataset.g,tr.dataset.r];followActive=false;refreshRuns();refreshCharts()});
+}
+async function refreshCharts(){
+  if(!selected)return;
+  let d;try{d=await J(`/api/run/${selected[0]}/${selected[1]}`)}catch(e){return}
+  const m=d.metrics,x=m.map(r=>r.epoch);$('#chartRun').textContent=selected[1];
+  chart($('#cLoss'),[{x,y:m.map(r=>r.train_loss),c:'#98a2b3'},{x,y:m.map(r=>r.val_loss),c:'#6A3D9A'}],{log:true,fmt:v=>v.toPrecision(2)});
+  chart($('#cAcc'),[{x,y:m.map(r=>100*r.val_acc),c:'#6A3D9A'},{x,y:m.map(r=>r.val_ccc),c:'#12805c',right:true}],{right:true,fmt:v=>v.toFixed(2)});
+  const G=i=>m.map(r=>r.val_gates?r.val_gates[i]:null);
+  chart($('#cGate'),[{x,y:G(0),c:'#0072B2'},{x,y:G(1),c:'#D55E00'},{x,y:G(2),c:'#009E73'}],{fmt:v=>v.toFixed(2)});
+  chart($('#cLr'),[{x,y:m.map(r=>r.lr),c:'#344054'}],{log:true,fmt:v=>v.toExponential(0)});
+}
+function md(t){
+  const L=t.split('\n');let h='',i=0;
+  while(i<L.length){const l=L[i];
+    if(l.startsWith('|')){const rows=[];while(i<L.length&&L[i].startsWith('|')){rows.push(L[i]);i++}
+      const cells=r=>r.split('|').slice(1,-1).map(c=>c.trim().replace(/\*\*(.+?)\*\*/g,'<b>$1</b>'));
+      h+='<table><thead><tr>'+cells(rows[0]).map(c=>`<th>${c}</th>`).join('')+'</tr></thead><tbody>'+rows.slice(2).map(r=>'<tr>'+cells(r).map(c=>`<td>${c}</td>`).join('')+'</tr>').join('')+'</tbody></table>';continue}
+    if(l.startsWith('## '))h+=`<h2>${l.slice(3)}</h2>`;else if(l.startsWith('# '))h+=`<h1>${l.slice(2)}</h1>`;
+    else if(l.startsWith('> '))h+=`<div class="warn">${l.slice(2)}</div>`;else if(l.trim())h+=`<p>${l.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>')}</p>`;i++}
+  return h}
+async function refreshResults(){
+  const r=await J('/api/results');
+  if(r.tables_md){$('#tables').innerHTML=md(r.tables_md);$('#tables').classList.remove('mute')}
+  $('#files').innerHTML=r.files.length?'Fichiers : '+r.files.map(f=>`<a href="/api/results/file/${f}">${f}</a>`).join(' · '):'';
+}
+async function refreshLog(){const t=await (await fetch('/api/log?n=120')).text();const p=$('#log');const end=p.scrollTop+p.clientHeight>=p.scrollHeight-20;p.textContent=t||'—';if(end)p.scrollTop=p.scrollHeight}
+
+document.querySelectorAll('[data-a]').forEach(b=>b.onclick=async()=>{
+  if(b.dataset.a==='pipeline'&&!confirm('Lancer tout le pipeline ? Cela peut prendre de nombreuses heures sur un portable.'))return;
+  try{await J('/api/job/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:b.dataset.a})});followActive=true;tick()}catch(e){alert(e.message)}});
+$('#stopBtn').onclick=async()=>{if(!confirm('Arrêter la tâche en cours ?'))return;await J('/api/job/stop',{method:'POST'});tick()};
+$('#diagBtn').onclick=async()=>{const d=$('#diag');d.style.display='block';d.textContent='Analyse…';d.textContent=JSON.stringify(await J('/api/diagnostic'),null,2)};
+
+async function tick(){await Promise.allSettled([refreshStatus(),refreshGpu()]);await refreshRuns().catch(()=>{});refreshCharts();refreshLog()}
+tick();refreshCache();refreshResults();
+setInterval(tick,3000);setInterval(()=>{refreshCache();refreshResults()},15000);
+window.addEventListener('resize',refreshCharts);
+</script>
+</body>
+</html>

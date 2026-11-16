@@ -1,0 +1,4 @@
+model,source,O,C,E,A,N,mean
+NJU-LAMDA (Zhang et al. 2016),Ponce-Lopez et al. ECCVW 2016 (challenge winner),0.912,0.916,0.913,0.913,0.910,0.913
+Aslan et al. 2021,Image and Vision Computing 110:104163 (per-trait values: copy from their Table),,,,,,0.918
+SSL-MEPR (Ryumina et al. 2026),Machine Learning and Knowledge Extraction 8(3):56 (per-trait: copy from their Table),,,,,,0.9288

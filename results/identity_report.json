@@ -1,0 +1,144 @@
+{
+ "n_clips": 10000,
+ "n_videos": 3060,
+ "n_identities": 2876,
+ "identities_with_several_videos": 168,
+ "cross_video_links": 1890,
+ "largest_identities": [
+  [
+   "id01912",
+   19
+  ],
+  [
+   "id00047",
+   18
+  ],
+  [
+   "id00934",
+   16
+  ],
+  [
+   "id05071",
+   14
+  ],
+  [
+   "id00680",
+   12
+  ]
+ ],
+ "clustering": {
+  "rule": "average-link over videos",
+  "link_density_tau": 0.25,
+  "single_link_n_identities": 2775,
+  "single_link_largest": [
+   [
+    "id00611",
+    70
+   ],
+   [
+    "id00206",
+    64
+   ],
+   [
+    "id01573",
+    26
+   ],
+   [
+    "id01912",
+    19
+   ],
+   [
+    "id00047",
+    18
+   ]
+  ]
+ },
+ "face_missing": 1,
+ "voice_missing": 1,
+ "calibration": {
+  "face": {
+   "thr": 0.6011801719665457,
+   "thr_strict": 0.7020690169632434,
+   "pos_median": 0.9427237212657928,
+   "neg_median": 0.0671735405921936,
+   "pos_recall_at_thr": 0.996931385786179,
+   "n_pos": 16294
+  },
+  "voice": {
+   "thr": 0.9591001456975943,
+   "thr_strict": 0.9751061526298517,
+   "pos_median": 0.9705763757228851,
+   "neg_median": 0.6436594724655151,
+   "pos_recall_at_thr": 0.7288572480667731,
+   "n_pos": 16294
+  }
+ },
+ "official_split": {
+  "test_clips_with_train_video": 1680,
+  "test_clips_with_train_identity": 1712,
+  "n_test": 2000
+ },
+ "S1_0": {
+  "train": 6000,
+  "val": 2000,
+  "test": 2000,
+  "train_test": 0,
+  "train_test_identity": 49
+ },
+ "S2_0": {
+  "train": 6000,
+  "val": 2000,
+  "test": 2000,
+  "train_test": 0,
+  "train_test_identity": 0
+ },
+ "S2A_0": {
+  "train": 6000,
+  "val": 2000,
+  "test": 2000,
+  "train_test": 0,
+  "train_test_identity": 0
+ },
+ "S1_1": {
+  "train": 6000,
+  "val": 2000,
+  "test": 2000,
+  "train_test": 0,
+  "train_test_identity": 43
+ },
+ "S2_1": {
+  "train": 6000,
+  "val": 2000,
+  "test": 2000,
+  "train_test": 0,
+  "train_test_identity": 0
+ },
+ "S2A_1": {
+  "train": 6000,
+  "val": 2000,
+  "test": 2000,
+  "train_test": 0,
+  "train_test_identity": 0
+ },
+ "S1_2": {
+  "train": 6000,
+  "val": 2000,
+  "test": 2000,
+  "train_test": 0,
+  "train_test_identity": 39
+ },
+ "S2_2": {
+  "train": 6000,
+  "val": 2000,
+  "test": 2000,
+  "train_test": 0,
+  "train_test_identity": 0
+ },
+ "S2A_2": {
+  "train": 6000,
+  "val": 2000,
+  "test": 2000,
+  "train_test": 0,
+  "train_test_identity": 0
+ }
+}

@@ -1,0 +1,41 @@
+# --- datasets (licensed, never committed) ---
+Chalearn/
+Chalearn V2/
+Mupta/
+*.mp4
+*.mov
+*.wav
+*.zip
+
+# --- generated artefacts ---
+cache/
+cache_mupta/
+runs/
+logs/
+figures/
+results/test_clips.json
+results/split_audit.json
+results/gates_test.csv
+results/mupta_metadata_test_predictions.csv
+
+# --- environment ---
+.venv/
+__pycache__/
+*.pyc
+*.tmp
+*.done
+.ipynb_checkpoints/
+.vscode/
+.idea/
+chalearn_passwords.txt
+
+# --- identity audit: face thumbnails of dataset subjects, never committed ---
+results/identity_verification.html
+
+# --- archives and manuscripts (not part of the code release) ---
+*.rar
+*.7z
+*.tar
+*.gz
+*.docx
+*.pdf

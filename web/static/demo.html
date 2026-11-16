@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SG-MBF · Tester le modèle</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#16181d;--mute:#667085;--line:#e4e7ec;--acc:#6A3D9A;--t:#0072B2;--a:#D55E00;--v:#009E73;--err:#b42318}
+*{box-sizing:border-box}body{margin:0;font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+header{display:flex;align-items:center;gap:16px;padding:14px 24px;background:var(--card);border-bottom:1px solid var(--line)}
+header h1{font-size:17px;margin:0;font-weight:650}.sub{color:var(--mute);font-size:13px}
+main{padding:20px 24px;max-width:1300px;margin:auto;display:grid;grid-template-columns:420px 1fr;gap:16px}
+@media(max-width:1000px){main{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+.card h2{font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--mute);margin:0 0 10px;font-weight:600}
+.drop{border:2px dashed #cfd4dc;border-radius:12px;padding:26px;text-align:center;color:var(--mute);cursor:pointer;transition:.2s}
+.drop.over{border-color:var(--acc);background:#f6f1fb}
+video{width:100%;border-radius:10px;background:#000;margin-top:10px;max-height:300px}
+textarea,input[type=search]{width:100%;font:inherit;border:1px solid var(--line);border-radius:8px;padding:8px}
+textarea{min-height:60px;margin-top:8px}
+button{font:inherit;border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:550}
+button.primary{background:var(--acc);border-color:var(--acc);color:#fff}button:disabled{opacity:.45;cursor:not-allowed}
+.row{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.list{max-height:260px;overflow:auto;border:1px solid var(--line);border-radius:8px;margin-top:8px}
+.list div{padding:6px 10px;border-bottom:1px solid var(--line);cursor:pointer;font-size:12.5px;font-family:ui-monospace,Consolas,monospace}
+.list div:hover,.list div.sel{background:#f3eefa}
+.trait{display:grid;grid-template-columns:150px 1fr 80px;gap:12px;align-items:center;margin:12px 0}
+.track{position:relative;height:22px;background:#eef0f3;border-radius:6px}
+.fill{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,#b9a3d6,var(--acc));border-radius:6px;transition:width .6s}
+.err{position:absolute;top:8px;height:6px;background:rgba(0,0,0,.25);border-radius:3px}
+.truth{position:absolute;top:-4px;bottom:-4px;width:3px;background:#111;border-radius:2px}
+.val{font-weight:650;text-align:right}
+.mods{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.mod{border:1px solid var(--line);border-radius:10px;padding:12px}.mod b{font-size:20px}
+.mbar{height:6px;border-radius:3px;background:#eef0f3;margin-top:8px;overflow:hidden}.mbar>div{height:100%}
+.mute{color:var(--mute)}.small{font-size:12px}
+.status{font-size:13px;color:var(--acc);min-height:20px}.error{color:var(--err)}
+.empty{color:var(--mute);text-align:center;padding:60px 20px}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid #d8cdea;border-top-color:var(--acc);border-radius:50%;animation:s 1s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes s{to{transform:rotate(360deg)}}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:12.5px}
+</style>
+</head>
+<body>
+<header>
+  <div><h1>SG-MBF · Tester le modèle</h1><div class="sub">Prédiction des traits Big Five apparents à partir d'une vidéo</div></div>
+  <span style="flex:1"></span>
+  <span class="small mute" id="modelInfo">—</span>
+  <button id="releaseBtn" title="Décharger Whisper, BERT, VGGish et Emo-AffectNet de la VRAM">Libérer la VRAM</button>
+</header>
+<main>
+  <div style="display:grid;gap:16px;align-content:start">
+    <div class="card"><h2>Votre vidéo</h2>
+      <div class="drop" id="drop">Glissez une vidéo .mp4 ici<br><span class="small">ou cliquez pour choisir un fichier</span></div>
+      <input type="file" id="file" accept="video/*" hidden>
+      <video id="player" controls style="display:none"></video>
+      <textarea id="transcript" placeholder="Transcription (facultatif). Si vide, Whisper transcrit l'audio."></textarea>
+      <div class="row"><button class="primary" id="runBtn" disabled>Analyser la vidéo</button><span class="small mute">Extraction complète : 20 à 60 s</span></div>
+    </div>
+    <div class="card"><h2>Clips du jeu de test</h2>
+      <input type="search" id="q" placeholder="Rechercher un clip…">
+      <div class="list" id="clips"><div class="mute">Chargement…</div></div>
+      <div class="small mute" style="margin-top:6px">Utilise les features déjà en cache ; la vérité terrain s'affiche en noir.</div>
+    </div>
+  </div>
+  <div style="display:grid;gap:16px;align-content:start">
+    <div class="card"><h2>Traits de personnalité apparents</h2>
+      <div class="status" id="status"></div>
+      <div id="traits"><div class="empty">Choisissez une vidéo ou un clip de test.</div></div>
+      <div class="small mute">Barre : moyenne des modèles (5 seeds) ; trait gris : ± 1 écart-type entre seeds ; trait noir : vérité terrain (annotateurs).</div>
+    </div>
+    <div class="card"><h2>Poids des modalités (porte partagée)</h2>
+      <div class="mods" id="mods"><div class="mute small">—</div></div>
+      <div class="small mute" style="margin-top:8px">La porte g<sub>m</sub> ∈ (0, 1) indique à quel point chaque modalité est conservée pour ce clip. La contribution effective tient compte de la norme ‖h<sub>m</sub>‖ ; ce n'est pas une attribution causale.</div>
+    </div>
+    <div class="card"><h2>Détails</h2><div class="kv" id="details"><span class="mute">—</span></div>
+      <div id="tr" class="small" style="margin-top:10px;white-space:pre-wrap"></div></div>
+  </div>
+</main>
+<script>
+const $=s=>document.querySelector(s);
+const NAMES={O:'Ouverture',C:'Conscienciosité',E:'Extraversion',A:'Agréabilité',N:'Névrosisme'};
+const MOD={t:['Texte','var(--t)'],a:['Voix','var(--a)'],v:['Visuel','var(--v)']};
+let file=null,clips=[],poll=null;
+async function J(u,o){const r=await fetch(u,o);const t=await r.text();if(!r.ok){let m=t;try{m=JSON.parse(t).detail}catch{}throw new Error(m)}return JSON.parse(t)}
+
+async function init(){
+  try{const m=await J('/api/models');$('#modelInfo').textContent=m.checkpoints.length?`${m.checkpoints.length} modèle(s) SG-MBF · split ${m.checkpoints[0].split_kind||'?'}`:'Aucun modèle entraîné';}catch{}
+  try{clips=await J('/api/test_clips');renderClips()}catch{$('#clips').innerHTML='<div class="mute">Aucun split de test.</div>'}
+}
+function renderClips(){const q=$('#q').value.toLowerCase();const L=clips.filter(c=>c.clip.toLowerCase().includes(q)).slice(0,300);
+  $('#clips').innerHTML=L.length?L.map(c=>`<div data-c="${c.clip}">${c.clip}</div>`).join(''):'<div class="mute">Aucun clip (entraînez d\'abord le modèle).</div>';
+  document.querySelectorAll('#clips [data-c]').forEach(d=>d.onclick=()=>{document.querySelectorAll('#clips .sel').forEach(x=>x.classList.remove('sel'));d.classList.add('sel');runClip(d.dataset.c)})}
+$('#q').oninput=renderClips;
+
+const drop=$('#drop');drop.onclick=()=>$('#file').click();
+['dragover','dragenter'].forEach(e=>drop.addEventListener(e,ev=>{ev.preventDefault();drop.classList.add('over')}));
+['dragleave','drop'].forEach(e=>drop.addEventListener(e,ev=>{ev.preventDefault();drop.classList.remove('over')}));
+drop.addEventListener('drop',ev=>setFile(ev.dataTransfer.files[0]));$('#file').onchange=e=>setFile(e.target.files[0]);
+function setFile(f){if(!f)return;file=f;const p=$('#player');p.src=URL.createObjectURL(f);p.style.display='block';drop.innerHTML=`<b>${f.name}</b><br><span class="small">${(f.size/1e6).toFixed(1)} Mo · cliquez pour changer</span>`;$('#runBtn').disabled=false}
+
+function busy(msg){$('#status').className='status';$('#status').innerHTML=msg?`<span class="spin"></span>${msg}`:''}
+function fail(e){$('#status').className='status error';$('#status').textContent='Erreur : '+e.message}
+
+$('#runBtn').onclick=async()=>{
+  if(!file)return;const fd=new FormData();fd.append('file',file);fd.append('transcript',$('#transcript').value);
+  $('#runBtn').disabled=true;busy('Analyse en cours…');
+  poll=setInterval(async()=>{try{const p=await J('/api/progress');if(p.msg)busy(p.msg)}catch{}},700);
+  try{show(await J('/api/predict',{method:'POST',body:fd}));busy('')}catch(e){fail(e)}finally{clearInterval(poll);$('#runBtn').disabled=false}};
+
+async function runClip(c){
+  const p=$('#player');p.src='/api/video/'+encodeURIComponent(c);p.style.display='block';
+  busy('Prédiction…');try{show(await J('/api/predict_clip',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({clip:c})}),c);busy('')}catch(e){fail(e)}}
+
+function show(r,clip){
+  $('#traits').innerHTML=Object.entries(r.traits).map(([t,v])=>{const tr=r.truth?r.truth[t]:null;
+    return `<div class="trait"><div><b>${NAMES[t]}</b> <span class="mute small">(${t})</span></div>
+    <div class="track"><div class="fill" style="width:${(100*v.mean).toFixed(1)}%"></div>
+    <div class="err" style="left:${(100*Math.max(0,v.mean-v.sd)).toFixed(1)}%;width:${(200*v.sd).toFixed(1)}%"></div>
+    ${tr!=null?`<div class="truth" style="left:calc(${(100*tr).toFixed(1)}% - 1px)" title="vérité terrain ${tr.toFixed(3)}"></div>`:''}</div>
+    <div class="val">${v.mean.toFixed(3)}${tr!=null?`<div class="small mute" style="font-weight:400">réel ${tr.toFixed(3)}</div>`:''}</div></div>`}).join('');
+  if(r.gates){$('#mods').innerHTML=Object.entries(r.gates).map(([m,g])=>`<div class="mod"><div class="mute small">${MOD[m][0]}</div>
+    <b>${g.toFixed(3)}</b> <span class="small mute">porte</span>
+    <div class="mbar"><div style="width:${(100*g).toFixed(1)}%;background:${MOD[m][1]}"></div></div>
+    <div class="small" style="margin-top:6px">Contribution effective : <b>${(100*r.contribution[m]).toFixed(1)} %</b></div></div>`).join('')}
+  const d=[['Source',r.source],['Modèles (seeds)',r.n_models]];
+  if(clip)d.unshift(['Clip',clip]);
+  if(r.duration_s)d.push(['Durée',r.duration_s.toFixed(1)+' s'],['Images analysées',r.n_frames],['Visage détecté',(100*r.face_rate).toFixed(0)+' % des images'],['Extraction',r.extraction_s.toFixed(1)+' s'],['Expressions',r.expression_backbone]);
+  if(r.truth){const mae=Object.keys(r.traits).reduce((s,t)=>s+Math.abs(r.traits[t].mean-r.truth[t]),0)/5;d.push(['Précision sur ce clip (1 − MAE)',(100*(1-mae)).toFixed(2)+' %'])}
+  $('#details').innerHTML=d.map(x=>`<span class="mute">${x[0]}</span><b>${x[1]}</b>`).join('');
+  $('#tr').innerHTML=r.transcript?`<span class="mute">Transcription :</span> ${r.transcript.replace(/</g,'&lt;')}`:'';
+}
+$('#releaseBtn').onclick=async()=>{await J('/api/release',{method:'POST'});busy('');$('#status').textContent='VRAM libérée.'};
+init();
+</script>
+</body>
+</html>
