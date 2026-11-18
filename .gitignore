@@ -39,3 +39,24 @@ results/identity_verification.html
 *.gz
 *.docx
 *.pdf
+
+# --- local Windows helpers, dashboard and earlier-project files (kept on disk, not published) ---
+*.bat
+!start.bat
+!stop.bat
+GUIDE_FR.md
+make_results_figures.py
+results_templates/
+results/published.csv
+results/components.csv
+results/cross_mupta.csv
+results/fairness.csv
+results/fusion_seeds.csv
+results/mupta_gates.csv
+results/robustness.csv
+results/robustness_control.csv
+results/seeds.csv
+results/tables.md
+sgmbf/download.py
+sgmbf/unzip_chalearn.py
+sgmbf/unzip_mupta.py

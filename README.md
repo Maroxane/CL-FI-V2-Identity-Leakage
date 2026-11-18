@@ -53,10 +53,11 @@ sgmbf/            Python package
   phase2.py       robustness, fairness, representation probe and MuPTA transfer with the audit models
   experiments.py  earlier experiments on the official split (main, fusion, ablation, robustness, fairness)
   mupta.py, cross.py   MuPTA feature extraction and cross-corpus evaluation
-web/              monitoring dashboard (port 8001) and demo interface (port 8002)
+web/              dashboard started by start.bat (port 8001) and demo interface (port 8002)
+launch.py         starts and stops the two web servers (used by start.bat / stop.bat)
 config.yaml       every hyper-parameter and path
 splits/           identity table and all splits
-results/          result tables and per-split CSV files
+results/          result tables of the paper (leakage, control, phase2) and the gate-variant selection
 ```
 
 ## Installation
@@ -64,7 +65,8 @@ results/          result tables and per-split CSV files
 Tested on Windows 11, Python 3.11, PyTorch 2.5.1 + CUDA 12.4, NVIDIA RTX 3060 Laptop (6 GB).
 
 **Windows:** double-click `start.bat`. It creates `.venv`, installs PyTorch and the requirements, then opens the
-dashboard at http://127.0.0.1:8001 (`stop.bat` stops everything; finished steps are cached and resumed).
+dashboard at http://127.0.0.1:8001, where each step of the pipeline (feature extraction, identities, leakage audit,
+control, secondary analyses) is one button. `stop.bat` stops everything; finished steps are cached and resumed.
 
 **Any OS:**
 ```bash
@@ -79,7 +81,7 @@ pip install "pyarrow==17.0.0" --no-deps --force-reinstall   # mediapipe 0.10.14 
 * **ChaLearn First Impressions V2** — request access at https://chalearnlap.cvc.uab.cat/dataset/24/description/
   (CC BY-NC 4.0). Place videos and the official files in `Chalearn/`:
   `annotation_{training,validation,test}.pkl`, `transcription_{training,validation,test}.pkl`,
-  `eth_gender_annotations_{dev,test}.csv`. `organiser_dataset.bat` (`python -m sgmbf.organize_chalearn`) checks that
+  `eth_gender_annotations_{dev,test}.csv`. `python -m sgmbf.organize_chalearn` checks that
   all 10,000 labelled clips are present and arranges them into `train/`, `val/`, `test/`.
 * **MuPTA** (Ryumina et al., Interspeech 2023) — obtained from its authors; place it in `Mupta/`
   (`video/`, `audio/`, `metadata/`). Only the central camera is used (`mupta.views`).
