@@ -105,7 +105,7 @@ The audit trains 2,240 small models on cached features; finished runs are reused
 ```bibtex
 @article{echhaimi2026leakage,
   title   = {Identity Leakage in ChaLearn First Impressions V2: What Multimodal Apparent Personality Recognition Benchmarks Actually Measure},
-  author  = {Echhaimi, Marouane and Lekdioui, Khadija and Chaabi, Youness and Aziz, Oussama and El-Khaldi, Adnane and Boujiha, Tarik},
+  author  = {Echhaimi, Marouane and Lekdioui, Khadija and Chaabi, Youness and Aziz, Oussama and Boujiha, Tarik},
   year    = {2026},
   note    = {Under review}
 }

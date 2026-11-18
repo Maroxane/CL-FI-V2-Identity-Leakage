@@ -13,8 +13,6 @@ authors:
     given-names: Youness
   - family-names: Aziz
     given-names: Oussama
-  - family-names: El-Khaldi
-    given-names: Adnane
   - family-names: Boujiha
     given-names: Tarik
 preferred-citation:
@@ -29,8 +27,6 @@ preferred-citation:
       given-names: Youness
     - family-names: Aziz
       given-names: Oussama
-    - family-names: El-Khaldi
-      given-names: Adnane
     - family-names: Boujiha
       given-names: Tarik
   year: 2026
